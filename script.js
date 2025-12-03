@@ -9,16 +9,34 @@ let current = 0;
 let currentZoom = 100;
 let previousCenter = null;
 let isUpdating = false;
+let baseWindowWidth = null;
 
 const schemes = [
     { name: "Fontana di Santa María", overallLrv: "66%", colors: [ {hex: "#E8D5C0", code: "SW 7023", name: "Travertine", lrv: 65}, {hex: "#C9AB8E", code: "SW 6097", name: "Craftsman Brown", lrv: 45}, {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} ] },
     { name: "Argento Romano", overallLrv: "68%", colors: [ {hex: "#E5E1D8", code: "SW 7028", name: "Incredible White", lrv: 70}, {hex: "#C5BFB3", code: "SW 6073", name: "Perfect Greige", lrv: 50}, {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} ] },
-    { name: "Pietra Grigia Romana", overallLrv: "58%", colors: [ {hex: "#C8CDCF", code: "SW 7017", name: "Dorian Gray", lrv: 52}, {hex: "#9EA7AA", code: "SW 7019", name: "Gauntlet Gray", lrv: 34}, {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} ] },
-    { name: "Rosa Aurora", overallLrv: "80%", colors: [ {hex: "#E9E0DD", code: "SW 6322", name: "Intimate White", lrv: 79}, {hex: "#F2DDDB", code: "SW 6568", name: "Lighthearted Pink", lrv: 77}, {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} ] },
     { name: "Neve di Marmo", overallLrv: "83%", colors: [ {hex: "#F0EEEB", code: "SW 7005", name: "Pure White", lrv: 87}, {hex: "#E2DFDA", code: "SW 7014", name: "Eider White", lrv: 77}, {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} ] }
 ];
 
 /* ------------------------------------------------------------------ */
+function calculateResponsiveZoom() {
+    // Only apply responsive zoom on desktop/landscape
+    if (window.innerWidth <= 768 && window.matchMedia('(orientation: portrait)').matches) {
+        return 100; // Keep 100% on mobile portrait
+    }
+    
+    if (!baseWindowWidth) {
+        baseWindowWidth = window.innerWidth;
+        return 50; // Initial zoom for desktop
+    }
+    
+    // Calculate proportional zoom based on window width change
+    const widthRatio = window.innerWidth / baseWindowWidth;
+    const newZoom = Math.round(50 * widthRatio);
+    
+    // Clamp between slider min/max values
+    return Math.max(50, Math.min(120, newZoom));
+}
+
 function saveCurrentCenter() {
     if (isUpdating) return;
     const w = scrollContainer.clientWidth;
@@ -66,7 +84,7 @@ function updateImageDimensions() {
         scrollContainer.style.overflowX = overflowX ? 'auto' : 'hidden';
         scrollContainer.style.overflowY = overflowY ? 'auto' : 'hidden';
 
-        void imgEl.offsetHeight;           // force reflow
+        void imgEl.offsetHeight;
         restorePreviousCenter();
         isUpdating = false;
     };
@@ -84,21 +102,16 @@ function show(n) {
 
     saveCurrentCenter();
 
-    // ----- CORRECT ORDER: calculate new index FIRST -----
     const newIndex = (n + images.length) % images.length;
 
-    // Remove active from old
     images[current].classList.remove('active');
     dots[current].classList.remove('active');
 
-    // Set new current
     current = newIndex;
 
-    // Add active to new
     images[current].classList.add('active');
     dots[current].classList.add('active');
 
-    // Update overlay
     const s = schemes[current];
     overlay.querySelector('.scheme-name').textContent = s.name;
     overlay.querySelector('.overall-lrv').textContent = `Overall LRV: ${s.overallLrv}`;
@@ -112,7 +125,6 @@ function show(n) {
         infos[i].querySelector('.lrv').textContent = `LRV ${c.lrv}`;
     });
 
-    // Finally size the NEW image
     updateImageDimensions();
 }
 
@@ -143,9 +155,22 @@ document.addEventListener('keydown', e => {
 // Resize
 window.addEventListener('resize', () => {
     saveCurrentCenter();
+    
+    // Update zoom based on window size for desktop
+    const newZoom = calculateResponsiveZoom();
+    if (newZoom !== currentZoom) {
+        currentZoom = newZoom;
+        zoomSlider.value = newZoom;
+        zoomValue.textContent = `${newZoom}%`;
+    }
+    
     updateImageDimensions();
 });
 
 /* ------------------------------------------------------------------ */
 // Start
+const initialZoom = calculateResponsiveZoom();
+currentZoom = initialZoom;
+zoomSlider.value = initialZoom;
+zoomValue.textContent = `${initialZoom}%`;
 show(0);

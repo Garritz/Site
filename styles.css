@@ -256,14 +256,55 @@ body {
     }
 }
 
-/* MOBILE PORTRAIT: Bottom-Center Layout */
+/* MOBILE PORTRAIT: Bottom-Center Layout - Compact Version */
 @media (orientation: portrait) and (max-width: 768px) {
     .fixed-overlay {
         bottom: 110px;
         left: 50%;
         transform: translateX(-50%);
-        width: 94vw;
-        padding: 1.2rem 1.3rem;
+        width: 90vw;
+        max-width: 320px;
+        padding: 0.8rem 1rem;
+    }
+    
+    .title-wrapper { 
+        margin-bottom: 0.5rem; 
+    }
+    
+    .scheme-name {
+        font-size: clamp(1.4rem, 4vw, 1.8rem);
+    }
+    
+    .overall-lrv {
+        font-size: 0.7rem;
+        margin-top: 0.2rem;
+    }
+    
+    .palette {
+        gap: 0.6rem;
+        margin-top: 0.4rem;
+    }
+    
+    .swatch {
+        width: clamp(40px, 10vw, 50px);
+        height: clamp(40px, 10vw, 50px);
+        border-radius: 8px;
+    }
+    
+    .info {
+        font-size: 0.55rem;
+    }
+    
+    .code { 
+        margin-bottom: 0.1rem;
+    }
+    
+    .name { 
+        margin-bottom: 0.15rem;
+    }
+    
+    .lrv { 
+        font-size: 0.65rem; 
     }
     
     .controls-wrapper {
@@ -271,12 +312,21 @@ body {
         left: 50%;
         transform: translateX(-50%);
         flex-direction: column;
-        gap: 0.7rem;
+        gap: 0.6rem;
     }
     
     .dots,
     .zoom-control {
-        padding: 0.7rem 1rem;
+        padding: 0.6rem 0.9rem;
+        height: 42px;
+    }
+    
+    .zoom-control {
+        font-size: 0.75rem;
+    }
+    
+    .zoom-control input[type="range"] {
+        width: 100px;
     }
     
     .nav { 
