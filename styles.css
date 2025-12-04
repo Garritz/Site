@@ -51,6 +51,7 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
     text-align: center;
     pointer-events: none;
+    transition: all 0.3s ease;
 }
 
 .title-wrapper { 
@@ -119,6 +120,11 @@ body {
     font-size: 0.82rem; 
     letter-spacing: 0.06em; 
     opacity: 0.95;
+}
+
+/* Controls inline (hidden on desktop, shown in mobile inside overlay) */
+.controls-inline {
+    display: none;
 }
 
 /* Navigation Buttons */
@@ -256,85 +262,153 @@ body {
     }
 }
 
-/* MOBILE PORTRAIT: Bottom-Center Layout - Compact Version */
-@media (orientation: portrait) and (max-width: 768px) {
-    .fixed-overlay {
-        bottom: 110px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90vw;
-        max-width: 320px;
-        padding: 0.8rem 1rem;
-    }
-    
-    .title-wrapper { 
-        margin-bottom: 0.5rem; 
-    }
-    
-    .scheme-name {
-        font-size: clamp(1.4rem, 4vw, 1.8rem);
-    }
-    
-    .overall-lrv {
-        font-size: 0.7rem;
-        margin-top: 0.2rem;
-    }
-    
-    .palette {
-        gap: 0.6rem;
-        margin-top: 0.4rem;
-    }
-    
-    .swatch {
-        width: clamp(40px, 10vw, 50px);
-        height: clamp(40px, 10vw, 50px);
-        border-radius: 8px;
-    }
-    
-    .info {
-        font-size: 0.55rem;
-    }
-    
-    .code { 
-        margin-bottom: 0.1rem;
-    }
-    
-    .name { 
-        margin-bottom: 0.15rem;
-    }
-    
-    .lrv { 
-        font-size: 0.65rem; 
-    }
-    
+/* MOBILE (both portrait and landscape): Collapsible card */
+@media (max-width: 768px) {
+    /* Hide separate controls wrapper */
     .controls-wrapper {
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
+        display: none !important;
+    }
+    
+    /* Show controls inside overlay */
+    .controls-inline {
+        display: flex;
         flex-direction: column;
         gap: 0.6rem;
+        margin-top: 0.8rem;
+        pointer-events: auto;
     }
     
-    .dots,
-    .zoom-control {
-        padding: 0.6rem 0.9rem;
-        height: 42px;
+    .controls-inline .dots,
+    .controls-inline .zoom-control {
+        width: 100%;
+        justify-content: center;
+        padding: 0.6rem 0.8rem;
+        height: 38px;
     }
     
-    .zoom-control {
-        font-size: 0.75rem;
+    .controls-inline .zoom-control {
+        font-size: 0.7rem;
     }
     
-    .zoom-control input[type="range"] {
+    .controls-inline .zoom-control input[type="range"] {
         width: 100px;
     }
     
-    .nav { 
-        width: 50px; 
-        height: 50px; 
-        font-size: 2rem; 
+    .controls-inline .zoom-control label {
+        font-size: 0.7rem;
     }
     
-    .prev { left: 0.8rem; }
-    .next { right: 0.8rem; }
+    .controls-inline .zoom-value {
+        font-size: 0.7rem;
+        min-width: 38px;
+    }
+    
+    /* Compact overlay - collapsed state */
+    .fixed-overlay {
+        width: auto;
+        max-width: none;
+        padding: 0.8rem 1rem;
+    }
+    
+    .fixed-overlay .title-wrapper {
+        pointer-events: auto;
+        cursor: pointer;
+        margin-bottom: 0.6rem;
+    }
+    
+    .scheme-name {
+        font-size: 1.2rem;
+    }
+    
+    .overall-lrv {
+        display: none;
+    }
+    
+    /* Hide palette in collapsed state */
+    .palette {
+        display: none;
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    /* Expanded state */
+    .fixed-overlay.expanded .palette {
+        display: flex;
+        opacity: 1;
+        max-height: 500px;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.8rem;
+        align-items: stretch;
+    }
+    
+    .fixed-overlay.expanded .overall-lrv {
+        display: block;
+        font-size: 0.7rem;
+        margin-top: 0.25rem;
+    }
+    
+    .color {
+        flex-direction: row;
+        gap: 0.6rem;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    
+    .swatch {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+    
+    .info {
+        font-size: 0.7rem;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+    
+    .code { 
+        margin-bottom: 0;
+        font-size: 0.75rem;
+    }
+    
+    .name {
+        font-size: 0.68rem;
+    }
+    
+    .lrv {
+        font-size: 0.68rem;
+    }
+    
+    .nav { 
+        width: 44px; 
+        height: 44px; 
+        font-size: 1.8rem; 
+    }
+    
+    .prev { left: 0.6rem; }
+    .next { right: 0.6rem; }
+}
+
+/* MOBILE LANDSCAPE: Bottom-Left */
+@media (orientation: landscape) and (max-width: 768px) {
+    .fixed-overlay {
+        bottom: 15px;
+        left: 15px;
+        transform: none;
+    }
+}
+
+/* MOBILE PORTRAIT: Bottom-Center */
+@media (orientation: portrait) and (max-width: 768px) {
+    .fixed-overlay {
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 }

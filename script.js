@@ -1,8 +1,11 @@
 const images = document.querySelectorAll('.bg-image');
-const dots = document.querySelectorAll('.dot');
+const dotsDesktop = document.querySelectorAll('.controls-wrapper .dot');
+const dotsMobile = document.querySelectorAll('.controls-inline .dot');
 const overlay = document.querySelector('.fixed-overlay');
-const zoomSlider = document.getElementById('zoom-slider');
-const zoomValue = document.querySelector('.zoom-value');
+const titleWrapper = overlay.querySelector('.title-wrapper');
+const zoomSliderDesktop = document.getElementById('zoom-slider-desktop');
+const zoomSliderMobile = document.getElementById('zoom-slider');
+const zoomValues = document.querySelectorAll('.zoom-value');
 const scrollContainer = document.querySelector('.scrollable-bg');
 
 let current = 0;
@@ -12,28 +15,76 @@ let isUpdating = false;
 let baseWindowWidth = null;
 
 const schemes = [
-    { name: "Fontana di Santa María", overallLrv: "66%", colors: [ {hex: "#E8D5C0", code: "SW 7023", name: "Travertine", lrv: 65}, {hex: "#C9AB8E", code: "SW 6097", name: "Craftsman Brown", lrv: 45}, {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} ] },
-    { name: "Argento Romano", overallLrv: "68%", colors: [ {hex: "#E5E1D8", code: "SW 7028", name: "Incredible White", lrv: 70}, {hex: "#C5BFB3", code: "SW 6073", name: "Perfect Greige", lrv: 50}, {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} ] },
-    { name: "Neve di Marmo", overallLrv: "83%", colors: [ {hex: "#F0EEEB", code: "SW 7005", name: "Pure White", lrv: 87}, {hex: "#E2DFDA", code: "SW 7014", name: "Eider White", lrv: 77}, {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} ] }
+    { 
+        name: "Fontana di Santa María", 
+        overallLrv: "66%", 
+        colors: [ 
+            {hex: "#E8D5C0", code: "SW 7023", name: "Travertine", lrv: 65}, 
+            {hex: "#C9AB8E", code: "SW 6097", name: "Craftsman Brown", lrv: 45}, 
+            {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} 
+        ],
+        images: {
+            desktop: "renders/a01_fontana.jpg",
+            mobile: "renders/mobile/a01_fontana_m.jpg"
+        }
+    },
+    { 
+        name: "Argento Romano", 
+        overallLrv: "68%", 
+        colors: [ 
+            {hex: "#E5E1D8", code: "SW 7028", name: "Incredible White", lrv: 70}, 
+            {hex: "#C5BFB3", code: "SW 6073", name: "Perfect Greige", lrv: 50}, 
+            {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} 
+        ],
+        images: {
+            desktop: "renders/a02_argento.jpg",
+            mobile: "renders/mobile/a02_argento_m.jpg"
+        }
+    },
+    { 
+        name: "Neve di Marmo", 
+        overallLrv: "83%", 
+        colors: [ 
+            {hex: "#F0EEEB", code: "SW 7005", name: "Pure White", lrv: 87}, 
+            {hex: "#E2DFDA", code: "SW 7014", name: "Eider White", lrv: 77}, 
+            {hex: "#FFFFFF", code: "SW 7757", name: "High Reflective White", lrv: 93} 
+        ],
+        images: {
+            desktop: "renders/a10_neve.jpg",
+            mobile: "renders/mobile/a10_neve_m.jpg"
+        }
+    }
 ];
 
 /* ------------------------------------------------------------------ */
+function isMobile() {
+    return window.innerWidth <= 768;
+}
+
+function isMobilePortrait() {
+    return window.innerWidth <= 768 && window.matchMedia('(orientation: portrait)').matches;
+}
+
 function calculateResponsiveZoom() {
-    // Only apply responsive zoom on desktop/landscape
-    if (window.innerWidth <= 768 && window.matchMedia('(orientation: portrait)').matches) {
-        return 100; // Keep 100% on mobile portrait
+    // Mobile portrait starts at higher zoom to fill vertical space
+    if (isMobilePortrait()) {
+        return 65;
     }
     
+    // Mobile landscape
+    if (isMobile()) {
+        return 55;
+    }
+    
+    // Desktop responsive zoom
     if (!baseWindowWidth) {
         baseWindowWidth = window.innerWidth;
-        return 50; // Initial zoom for desktop
+        return 50;
     }
     
-    // Calculate proportional zoom based on window width change
     const widthRatio = window.innerWidth / baseWindowWidth;
     const newZoom = Math.round(50 * widthRatio);
     
-    // Clamp between slider min/max values
     return Math.max(50, Math.min(120, newZoom));
 }
 
@@ -41,9 +92,16 @@ function saveCurrentCenter() {
     if (isUpdating) return;
     const w = scrollContainer.clientWidth;
     const h = scrollContainer.clientHeight;
+    const imgEl = images[current];
+    
+    // Calculate center point relative to the image dimensions, not container
+    const imgRect = imgEl.getBoundingClientRect();
+    const containerRect = scrollContainer.getBoundingClientRect();
+    
     previousCenter = {
         x: scrollContainer.scrollLeft + w / 2,
-        y: scrollContainer.scrollTop + h / 2
+        y: scrollContainer.scrollTop + h / 2,
+        zoom: currentZoom
     };
 }
 
@@ -51,6 +109,8 @@ function restorePreviousCenter() {
     if (!previousCenter || isUpdating) return;
     const w = scrollContainer.clientWidth;
     const h = scrollContainer.clientHeight;
+    
+    // Restore scroll position
     scrollContainer.scrollLeft = previousCenter.x - w / 2;
     scrollContainer.scrollTop = previousCenter.y - h / 2;
 }
@@ -58,9 +118,15 @@ function restorePreviousCenter() {
 /* ------------------------------------------------------------------ */
 function updateImageDimensions() {
     if (isUpdating) return;
+    
+    saveCurrentCenter();
+    applyImageDimensions(images[current], currentZoom);
+}
+
+function applyImageDimensions(imgEl, zoom, maintainScrollX, maintainScrollY) {
+    if (isUpdating) return;
     isUpdating = true;
 
-    const imgEl = images[current];
     const containerW = scrollContainer.clientWidth;
     const containerH = scrollContainer.clientHeight;
 
@@ -68,7 +134,7 @@ function updateImageDimensions() {
     tempImg.src = imgEl.src;
 
     const apply = () => {
-        const scale = currentZoom / 100;
+        const scale = zoom / 100;
         const newW = tempImg.naturalWidth * scale;
         const newH = tempImg.naturalHeight * scale;
 
@@ -85,7 +151,15 @@ function updateImageDimensions() {
         scrollContainer.style.overflowY = overflowY ? 'auto' : 'hidden';
 
         void imgEl.offsetHeight;
-        restorePreviousCenter();
+        
+        // Restore scroll position if provided, otherwise use saved center
+        if (maintainScrollX !== undefined && maintainScrollY !== undefined) {
+            scrollContainer.scrollLeft = maintainScrollX;
+            scrollContainer.scrollTop = maintainScrollY;
+        } else {
+            restorePreviousCenter();
+        }
+        
         isUpdating = false;
     };
 
@@ -100,19 +174,34 @@ function updateImageDimensions() {
 function show(n) {
     if (isUpdating) return;
 
-    saveCurrentCenter();
+    // Save current view state BEFORE changing
+    const previousZoom = currentZoom;
+    const previousScrollX = scrollContainer.scrollLeft;
+    const previousScrollY = scrollContainer.scrollTop;
 
     const newIndex = (n + images.length) % images.length;
 
     images[current].classList.remove('active');
-    dots[current].classList.remove('active');
+    dotsDesktop[current].classList.remove('active');
+    dotsMobile[current].classList.remove('active');
 
     current = newIndex;
 
     images[current].classList.add('active');
-    dots[current].classList.add('active');
+    dotsDesktop[current].classList.add('active');
+    dotsMobile[current].classList.add('active');
 
+    // Update image source based on viewport
     const s = schemes[current];
+    const imageSrc = isMobile() ? s.images.mobile : s.images.desktop;
+    
+    // Check if image needs to be loaded
+    const needsLoad = images[current].src.indexOf(imageSrc) === -1;
+    
+    if (needsLoad) {
+        images[current].src = imageSrc;
+    }
+
     overlay.querySelector('.scheme-name').textContent = s.name;
     overlay.querySelector('.overall-lrv').textContent = `Overall LRV: ${s.overallLrv}`;
 
@@ -121,11 +210,14 @@ function show(n) {
     s.colors.forEach((c, i) => {
         swatches[i].style.background = c.hex;
         infos[i].querySelector('.code').textContent = c.code;
-        infos[i].querySelector('.name').textContent = c.name;
-        infos[i].querySelector('.lrv').textContent = `LRV ${c.lrv}`;
+        const nameEl = infos[i].querySelector('.name');
+        const lrvEl = infos[i].querySelector('.lrv');
+        if (nameEl) nameEl.textContent = c.name;
+        if (lrvEl) lrvEl.textContent = `LRV ${c.lrv}`;
     });
 
-    updateImageDimensions();
+    // Apply dimensions with the CURRENT zoom and scroll position
+    applyImageDimensions(images[current], previousZoom, previousScrollX, previousScrollY);
 }
 
 /* ------------------------------------------------------------------ */
@@ -133,18 +225,40 @@ function applyZoom(value) {
     if (isUpdating || currentZoom === value) return;
     saveCurrentCenter();
     currentZoom = value;
-    updateImageDimensions();
-    zoomValue.textContent = `${value}%`;
+    applyImageDimensions(images[current], value);
+    
+    // Update all zoom displays
+    zoomValues.forEach(el => el.textContent = `${value}%`);
+    if (zoomSliderDesktop) zoomSliderDesktop.value = value;
+    if (zoomSliderMobile) zoomSliderMobile.value = value;
 }
 
 /* ------------------------------------------------------------------ */
+// Toggle mobile card expansion
+if (titleWrapper) {
+    titleWrapper.addEventListener('click', (e) => {
+        if (isMobile()) {
+            e.stopPropagation();
+            overlay.classList.toggle('expanded');
+        }
+    });
+}
+
 // Navigation
 document.querySelector('.prev').onclick = () => show(current - 1);
 document.querySelector('.next').onclick = () => show(current + 1);
-dots.forEach((dot, i) => dot.onclick = () => show(i));
 
-// Zoom
-zoomSlider.addEventListener('input', e => applyZoom(parseInt(e.target.value, 10)));
+// Dots for both desktop and mobile
+dotsDesktop.forEach((dot, i) => dot.onclick = () => show(i));
+dotsMobile.forEach((dot, i) => dot.onclick = () => show(i));
+
+// Zoom for both sliders
+if (zoomSliderDesktop) {
+    zoomSliderDesktop.addEventListener('input', e => applyZoom(parseInt(e.target.value, 10)));
+}
+if (zoomSliderMobile) {
+    zoomSliderMobile.addEventListener('input', e => applyZoom(parseInt(e.target.value, 10)));
+}
 
 // Keyboard
 document.addEventListener('keydown', e => {
@@ -156,12 +270,20 @@ document.addEventListener('keydown', e => {
 window.addEventListener('resize', () => {
     saveCurrentCenter();
     
-    // Update zoom based on window size for desktop
+    // Update image source if device type changed
+    const s = schemes[current];
+    const imageSrc = isMobile() ? s.images.mobile : s.images.desktop;
+    if (images[current].src.indexOf(imageSrc) === -1) {
+        images[current].src = imageSrc;
+    }
+    
+    // Update zoom based on window size
     const newZoom = calculateResponsiveZoom();
     if (newZoom !== currentZoom) {
         currentZoom = newZoom;
-        zoomSlider.value = newZoom;
-        zoomValue.textContent = `${newZoom}%`;
+        if (zoomSliderDesktop) zoomSliderDesktop.value = newZoom;
+        if (zoomSliderMobile) zoomSliderMobile.value = newZoom;
+        zoomValues.forEach(el => el.textContent = `${newZoom}%`);
     }
     
     updateImageDimensions();
@@ -171,6 +293,14 @@ window.addEventListener('resize', () => {
 // Start
 const initialZoom = calculateResponsiveZoom();
 currentZoom = initialZoom;
-zoomSlider.value = initialZoom;
-zoomValue.textContent = `${initialZoom}%`;
+if (zoomSliderDesktop) zoomSliderDesktop.value = initialZoom;
+if (zoomSliderMobile) zoomSliderMobile.value = initialZoom;
+zoomValues.forEach(el => el.textContent = `${initialZoom}%`);
+
+// Set initial image sources
+images.forEach((img, i) => {
+    const src = isMobile() ? schemes[i].images.mobile : schemes[i].images.desktop;
+    img.src = src;
+});
+
 show(0);

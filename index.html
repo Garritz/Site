@@ -41,8 +41,24 @@
                 </div>
             </div>
         </div>
+
+        <!-- Controls inside overlay for mobile -->
+        <div class="controls-inline">
+            <div class="dots">
+                <span class="dot active" data-index="0"></span>
+                <span class="dot" data-index="1"></span>
+                <span class="dot" data-index="2"></span>
+            </div>
+
+            <div class="zoom-control">
+                <label for="zoom-slider">Zoom</label>
+                <input type="range" id="zoom-slider" min="50" max="120" value="100" step="5">
+                <span class="zoom-value">100%</span>
+            </div>
+        </div>
     </div>
 
+    <!-- Separate controls for desktop/landscape -->
     <div class="controls-wrapper">
         <div class="dots">
             <span class="dot active" data-index="0"></span>
@@ -51,16 +67,16 @@
         </div>
 
         <div class="zoom-control">
-            <label for="zoom-slider">Zoom</label>
-            <input type="range" id="zoom-slider" min="50" max="120" value="100" step="5">
+            <label for="zoom-slider-desktop">Zoom</label>
+            <input type="range" id="zoom-slider-desktop" min="50" max="120" value="100" step="5">
             <span class="zoom-value">100%</span>
         </div>
     </div>
 
     <div class="scrollable-bg">
-        <img src="renders/a01_fontana.jpg" alt="Fontana di Santa María" class="bg-image active">
-        <img src="renders/a02_argento.jpg" alt="Argento Romano" class="bg-image">
-        <img src="renders/a10_neve.jpg" alt="Neve di Marmo" class="bg-image">
+        <img src="renders/a01_fontana.png" alt="Fontana di Santa María" class="bg-image active">
+        <img src="renders/a02_argento.png" alt="Argento Romano" class="bg-image">
+        <img src="renders/a10_neve.png" alt="Neve di Marmo" class="bg-image">
     </div>
 
     <button class="nav prev">‹</button>
