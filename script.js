@@ -199,8 +199,13 @@ function show(n) {
     const needsLoad = images[current].src.indexOf(imageSrc) === -1;
     
     if (needsLoad) {
-        images[current].src = imageSrc;
-    }
+    images[current].src = imageSrc;
+    images[current].style.opacity = '0';
+    images[current].onload = () => {
+        images[current].style.transition = 'opacity 0.3s';
+        images[current].style.opacity = '1';
+    };
+}
 
     overlay.querySelector('.scheme-name').textContent = s.name;
     overlay.querySelector('.overall-lrv').textContent = `Overall LRV: ${s.overallLrv}`;
